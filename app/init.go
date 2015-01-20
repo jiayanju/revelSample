@@ -1,6 +1,11 @@
 package app
 
-import "github.com/revel/revel"
+import (
+	"github.com/revel/revel"
+	"gopkg.in/igm/sockjs-go.v2/sockjs"
+	"gopkg.in/stomp.v1"
+	"net/http"
+)
 
 func init() {
 	// Filters is the default set of global filters.
@@ -23,6 +28,7 @@ func init() {
 	// ( order dependent )
 	// revel.OnAppStart(InitDB)
 	// revel.OnAppStart(FillCache)
+	revel.OnAppStart(installHandlers)
 }
 
 // TODO turn this into revel.HeaderFilter
@@ -35,4 +41,50 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	c.Response.Out.Header().Add("X-Content-Type-Options", "nosniff")
 
 	fc[0](c, fc[1:]) // Execute the next filter stage.
+}
+
+func installHandlers() {
+	websocketHandler := sockjs.NewHandler("/websocket/sockjs/room", sockjs.DefaultOptions, func(session sockjs.Session) {
+		revel.TRACE.Println("begin handle websocket")
+		room := "/topic/room1"
+		conn, _ := stomp.Dial("tcp", "localhost:61613", stomp.Options{})
+		sub, _ := conn.Subscribe(room, stomp.AckAuto)
+
+		newMessages := make(chan string)
+		go func() {
+			for {
+				msg, err := session.Recv()
+				if err != nil {
+					close(newMessages)
+					return
+				}
+				newMessages <- msg
+			}
+		}()
+
+		for {
+			select {
+			case msg := <-sub.C:
+				if session.Send(string(msg.Body)) != nil {
+					break
+				}
+
+			case receivedMsg, ok := <-newMessages:
+				if !ok {
+					break
+				}
+				conn.Send(room, "", []byte(receivedMsg), nil)
+
+			}
+		}
+	})
+
+	var (
+		serverMux    = http.NewServeMux()
+		revelHandler = revel.Server.Handler
+	)
+	serverMux.Handle("/websocket/sockjs/room/", websocketHandler)
+	serverMux.Handle("/", revelHandler)
+	revel.Server.Handler = serverMux
+	revel.TRACE.Println("Register websocket handler")
 }

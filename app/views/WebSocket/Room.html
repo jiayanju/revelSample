@@ -12,14 +12,20 @@
 </div>
 
 <script type="text/javascript">
-// Create a socket
-var socket = new WebSocket('ws://'+window.location.host+'/websocket/room/socket?user={{.user}}')
 
-socket.onmessage = function(event) {
-	$("#thread").append(JSON.parse(event.data))
-}
+var socket = new SockJS(window.location.origin + '/websocket/sockjs/room');
+ socket.onopen = function() {
+     console.log('open');
+ };
+ socket.onmessage = function(e) {
+     console.log('message', e.data);
+     $("#thread").append(e.data).append("<br />")
+ };
+ socket.onclose = function() {
+     console.log('close');
+ };
 
- $('#send').click(function(e) {
+  $('#send').click(function(e) {
 var message = $('#message').val()
 $('#message').val('')
 socket.send(message)
@@ -31,4 +37,5 @@ $('#send').click()
 e.preventDefault()
 }
 })
+
 </script>
