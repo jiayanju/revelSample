@@ -1,6 +1,7 @@
 package app
 
 import (
+	"chat/app/chatservice"
 	"github.com/revel/revel"
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
 	"gopkg.in/stomp.v1"
@@ -43,6 +44,8 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
 
+var service chatservice.ChatRedisService = chatservice.NewChatRedisService()
+
 func installHandlers() {
 	websocketHandler := sockjs.NewHandler("/websocket/sockjs/room", sockjs.DefaultOptions, func(session sockjs.Session) {
 		revel.TRACE.Println("begin handle websocket")
@@ -74,7 +77,7 @@ func installHandlers() {
 					break
 				}
 				conn.Send(room, "", []byte(receivedMsg), nil)
-
+				service.SaveValueToList("room2", receivedMsg)
 			}
 		}
 	})
