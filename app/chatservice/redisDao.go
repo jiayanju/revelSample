@@ -9,7 +9,7 @@ import (
 type ChatRedisDao interface {
 	SaveValueToList(key string, value string)
 
-	GetValues(key string) string
+	GetValues(key string) []string
 }
 
 type ChatRedisDaoImpl struct {
@@ -23,20 +23,20 @@ func (c *ChatRedisDaoImpl) SaveValueToList(key string, value string) {
 	conn.Do("RPUSH", key, value)
 }
 
-func (c *ChatRedisDaoImpl) GetValues(key string) (value string) {
+func (c *ChatRedisDaoImpl) GetValues(key string) []string {
 	conn := c.pool.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("Get", key)
-	if err == nil {
+	values, err := redis.Strings(conn.Do("LRANGE", key, 0, -1))
+	if err != nil {
 		revel.TRACE.Println(err)
 	}
-	return value
+	return values
 }
 
 func NewChatRedisDao(server string) ChatRedisDao {
-	return &ChatRedisDaoImpl{
-		pool: newPool(server)}
+	pool := newPool(server)
+	return &ChatRedisDaoImpl{pool: pool}
 }
 
 func newPool(server string) *redis.Pool {

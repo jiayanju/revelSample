@@ -26,9 +26,9 @@ var socket = new SockJS(window.location.origin + '/websocket/sockjs/room');
  };
 
   $('#send').click(function(e) {
-var message = $('#message').val()
-$('#message').val('')
-socket.send(message)
+	var message = $('#message').val()
+	$('#message').val('')
+	socket.send(message)
 });
 
 $('#message').keypress(function(e) {

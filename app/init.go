@@ -29,8 +29,13 @@ func init() {
 	// ( order dependent )
 	// revel.OnAppStart(InitDB)
 	// revel.OnAppStart(FillCache)
+	revel.OnAppStart(initSystem)
 	revel.OnAppStart(installHandlers)
 }
+
+var (
+	service chatservice.ChatRedisService
+)
 
 // TODO turn this into revel.HeaderFilter
 // should probably also have a filter for CSRF
@@ -44,9 +49,13 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 	fc[0](c, fc[1:]) // Execute the next filter stage.
 }
 
-var service chatservice.ChatRedisService = chatservice.NewChatRedisService()
+func initSystem() {
+	service = chatservice.NewChatRedisService()
+
+}
 
 func installHandlers() {
+
 	websocketHandler := sockjs.NewHandler("/websocket/sockjs/room", sockjs.DefaultOptions, func(session sockjs.Session) {
 		revel.TRACE.Println("begin handle websocket")
 		room := "/topic/room1"
@@ -65,6 +74,16 @@ func installHandlers() {
 			}
 		}()
 
+		msgs := service.GetValues("room2")
+
+		count := len(msgs)
+		revel.TRACE.Printf("msg length : %d", count)
+		if count > 0 {
+			for i := range msgs {
+				session.Send(msgs[i])
+			}
+		}
+
 		for {
 			select {
 			case msg := <-sub.C:
@@ -80,6 +99,7 @@ func installHandlers() {
 				service.SaveValueToList("room2", receivedMsg)
 			}
 		}
+
 	})
 
 	var (
