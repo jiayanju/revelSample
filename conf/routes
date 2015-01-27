@@ -4,9 +4,9 @@
 
 module:testrunner
 
-GET     /                                       App.Index
+GET     /                                       App.Home
 
-GET		/hello									App.Hello
+POST	/chat/room 								ChatController.CreateRoom
 
 # WebSocket demo
 GET 	/websocket/room							WebSocket.Room

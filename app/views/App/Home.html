@@ -1,0 +1,12 @@
+{{set . "title" "Home"}} {{template "header.html" .}}
+<div class="row">
+    <form action="/chat/room" method="post">
+        <div>
+            <input type="textbox" class="form-control" placeholder="Room Name" name="roomName" />
+        </div>
+        <div>
+            <input type="submit" class="btn btn-primary" value="Create New Room" />
+        </div>
+    </form>
+</div>
+{{template "footer.html" .}}

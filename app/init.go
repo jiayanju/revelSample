@@ -34,7 +34,7 @@ func init() {
 }
 
 var (
-	service chatservice.ChatRedisService
+	ChatService chatservice.ChatRedisService
 )
 
 // TODO turn this into revel.HeaderFilter
@@ -50,7 +50,7 @@ var HeaderFilter = func(c *revel.Controller, fc []revel.Filter) {
 }
 
 func initSystem() {
-	service = chatservice.NewChatRedisService()
+	ChatService = chatservice.NewChatRedisService()
 
 }
 
@@ -74,7 +74,7 @@ func installHandlers() {
 			}
 		}()
 
-		msgs := service.GetValues("room2")
+		msgs := ChatService.GetValues("room2")
 
 		count := len(msgs)
 		revel.TRACE.Printf("msg length : %d", count)
@@ -96,7 +96,7 @@ func installHandlers() {
 					break
 				}
 				conn.Send(room, "", []byte(receivedMsg), nil)
-				service.SaveValueToList("room2", receivedMsg)
+				ChatService.SaveValueToList("room2", receivedMsg)
 			}
 		}
 

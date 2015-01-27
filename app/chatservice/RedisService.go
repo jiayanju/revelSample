@@ -23,11 +23,7 @@ func (c *ChatRedisServiceImpl) GetValues(key string) []string {
 }
 
 func NewChatRedisService() ChatRedisService {
-	// server := revel.Config.StringDefault("redis.server.address", "11.11.11.11:6379")
-	server, found := revel.Config.String("redis.server.address")
-	if !found {
-		server = ""
-	}
+	server := revel.Config.StringDefault("redis.server.address", "11.11.11.11:6379")
 	return &ChatRedisServiceImpl{
 		chatRedisDao: NewChatRedisDao(server)}
 }
