@@ -8,6 +8,8 @@ GET     /                                       App.Home
 
 POST	/chat/room 								ChatController.CreateRoom
 
+GET 	/chat/room/:roomName					ChatController.Room
+
 # WebSocket demo
 GET 	/websocket/room							WebSocket.Room
 WS 		/websocket/room/socket 					WebSocket.RoomSocket
